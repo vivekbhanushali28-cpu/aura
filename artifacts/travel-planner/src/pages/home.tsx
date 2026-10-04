@@ -14,7 +14,7 @@ export default function Home() {
       <section className="relative h-[85vh] min-h-[580px] flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
-          style={{ backgroundImage: `url(/hero-bg.png)` }}
+          style={{ backgroundImage: `url(${import.meta.env.BASE_URL}hero-bg.png)` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60" />
 
