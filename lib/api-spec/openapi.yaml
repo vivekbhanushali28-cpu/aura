@@ -1,0 +1,531 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification for AI Travel Planner
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: itineraries
+    description: Travel itinerary operations
+  - name: openai
+    description: OpenAI AI chat and streaming operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /itineraries:
+    get:
+      operationId: listItineraries
+      tags: [itineraries]
+      summary: List all saved itineraries
+      responses:
+        "200":
+          description: List of itineraries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Itinerary"
+    post:
+      operationId: createItinerary
+      tags: [itineraries]
+      summary: Create a new itinerary from user preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItineraryInput"
+      responses:
+        "201":
+          description: Created itinerary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Itinerary"
+
+  /itineraries/{id}:
+    get:
+      operationId: getItinerary
+      tags: [itineraries]
+      summary: Get a specific itinerary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Itinerary details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Itinerary"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteItinerary
+      tags: [itineraries]
+      summary: Delete a saved itinerary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /itineraries/generate:
+    post:
+      operationId: generateItinerary
+      tags: [itineraries]
+      summary: Generate a new AI travel itinerary via SSE stream
+      description: Streams back structured itinerary content using Server-Sent Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TravelPreferences"
+      responses:
+        "200":
+          description: SSE stream of itinerary content
+          content:
+            text/event-stream: {}
+
+  /itineraries/recent:
+    get:
+      operationId: listRecentItineraries
+      tags: [itineraries]
+      summary: Get recently generated itineraries
+      responses:
+        "200":
+          description: Recent itineraries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Itinerary"
+
+  /itineraries/stats:
+    get:
+      operationId: getItineraryStats
+      tags: [itineraries]
+      summary: Get itinerary statistics (top destinations, budget ranges, etc.)
+      responses:
+        "200":
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItineraryStats"
+
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiConversationInput"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a text message and receive a streaming text response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiMessageInput"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    TravelPreferences:
+      type: object
+      required:
+        - destination
+        - durationDays
+        - budget
+        - travelers
+        - travelStyle
+      properties:
+        destination:
+          type: string
+          description: Destination city/country
+        durationDays:
+          type: integer
+          description: Number of days for the trip
+        budget:
+          type: string
+          enum: [budget, mid-range, luxury]
+        travelers:
+          type: integer
+          description: Number of travelers
+        travelStyle:
+          type: string
+          enum: [adventure, cultural, relaxation, foodie, family, romantic, backpacker]
+        startDate:
+          type: ["string", "null"]
+          description: Optional start date (YYYY-MM-DD)
+        interests:
+          type: array
+          items:
+            type: string
+          description: Specific interests or activities
+        specialRequirements:
+          type: ["string", "null"]
+          description: Any special requirements (dietary, accessibility, etc.)
+        transportFrom:
+          type: ["string", "null"]
+          description: Origin city/location for intercity transport planning
+        transportTo:
+          type: ["string", "null"]
+          description: Destination city for intercity transport (defaults to destination if omitted)
+
+    Itinerary:
+      type: object
+      required:
+        - id
+        - destination
+        - durationDays
+        - budget
+        - travelers
+        - travelStyle
+        - content
+        - createdAt
+      properties:
+        id:
+          type: integer
+        destination:
+          type: string
+        durationDays:
+          type: integer
+        budget:
+          type: string
+        travelers:
+          type: integer
+        travelStyle:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        interests:
+          type: ["string", "null"]
+          description: JSON-serialized array of interests
+        specialRequirements:
+          type: ["string", "null"]
+        transportFrom:
+          type: ["string", "null"]
+        transportTo:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+          description: Destination hero image URL (from Wikipedia)
+        content:
+          type: string
+          description: Full AI-generated itinerary text (markdown)
+        createdAt:
+          type: string
+          format: date-time
+
+    ItineraryInput:
+      type: object
+      required:
+        - destination
+        - durationDays
+        - budget
+        - travelers
+        - travelStyle
+        - content
+      properties:
+        destination:
+          type: string
+        durationDays:
+          type: integer
+        budget:
+          type: string
+        travelers:
+          type: integer
+        travelStyle:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        interests:
+          type: ["string", "null"]
+        specialRequirements:
+          type: ["string", "null"]
+        transportFrom:
+          type: ["string", "null"]
+        transportTo:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        content:
+          type: string
+
+    ItineraryStats:
+      type: object
+      required:
+        - totalItineraries
+        - topDestinations
+        - budgetBreakdown
+        - popularStyles
+      properties:
+        totalItineraries:
+          type: integer
+        topDestinations:
+          type: array
+          items:
+            type: object
+            required: [destination, count]
+            properties:
+              destination:
+                type: string
+              count:
+                type: integer
+        budgetBreakdown:
+          type: object
+          required: [budget, midRange, luxury]
+          properties:
+            budget:
+              type: integer
+            midRange:
+              type: integer
+            luxury:
+              type: integer
+        popularStyles:
+          type: array
+          items:
+            type: object
+            required: [style, count]
+            properties:
+              style:
+                type: string
+              count:
+                type: integer
+
+    OpenaiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+
+    OpenaiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+
+    OpenaiConversationInput:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+
+    OpenaiMessageInput:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+
+    OpenaiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+
+    OpenaiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

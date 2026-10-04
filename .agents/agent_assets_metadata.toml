@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "pHZotfkguZ3MmLnuREmQ_"
+uri = "file://artifacts/travel-planner/public/hero-bg.png"
+type = "image"
+title = "Luxury travel magazine hero image"
