@@ -11,6 +11,7 @@ import {
   getGetItineraryStatsQueryKey,
   getGetOpenaiConversationQueryKey,
 } from "@workspace/api-client-react";
+import { apiUrl } from "@/lib/api-url";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -461,7 +462,7 @@ export default function ItineraryDetail() {
     setStreamingContent("");
 
     try {
-      const response = await fetch(`/api/openai/conversations/${conversationId}/messages`, {
+      const response = await fetch(apiUrl(`/api/openai/conversations/${conversationId}/messages`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: text }),
