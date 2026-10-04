@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, MapPin, Send, Plane, ArrowRight } from "lucide-react";
 import { getListItinerariesQueryKey, getListRecentItinerariesQueryKey, getGetItineraryStatsQueryKey } from "@workspace/api-client-react";
+import { apiUrl } from "@/lib/api-url";
 import { useQueryClient } from "@tanstack/react-query";
 
 const schema = z.object({
@@ -89,7 +90,7 @@ export default function ItineraryGenerator() {
     };
 
     try {
-      const response = await fetch("/api/itineraries/generate", {
+      const response = await fetch(apiUrl("/api/itineraries/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
